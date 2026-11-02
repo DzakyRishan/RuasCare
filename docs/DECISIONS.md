@@ -6,3 +6,4 @@
 4. **Arsitektur:** Feature-first / Clean Architecture (`lib/features/<fitur>/{data,domain,presentation}`).
 5. **Data Layer:** Repository Pattern. Untuk fase awal / MVP frontend, menggunakan `FakeReportRepository` yang mengembalikan data mock realistis, sebelum dihubungkan ke backend Spring Boot.
 6. **Backend:** Spring Boot 3.3 REST API + Spring Security JWT + PostgreSQL.
+7. **GPS Form:** Lokasi diambil sebelum laporan dikirim. Form menampilkan koordinat dan akurasi, menyediakan tombol perbarui lokasi, serta meminta konfirmasi bila akurasi lebih dari 100 meter.
