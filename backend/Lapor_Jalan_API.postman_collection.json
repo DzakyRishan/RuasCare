@@ -1,0 +1,193 @@
+{
+  "info": {
+    "_postman_id": "ruascare-api-collection",
+    "name": "RuasCare API",
+    "description": "Collection for the RuasCare Spring Boot API. Set the token variables after login. Never save a real password or JWT token in this file.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register Citizen",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nama Warga Baru\",\n  \"email\": \"{{newCitizenEmail}}\",\n  \"password\": \"{{newCitizenPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Login Citizen",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{citizenEmail}}\",\n  \"password\": \"{{citizenPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Login Officer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{officerEmail}}\",\n  \"password\": \"{{officerPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Citizen Reports",
+      "item": [
+        {
+          "name": "Create Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizenToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Jalan berlubang cukup dalam dan membahayakan pengendara.\",\n  \"severity\": \"PARAH\",\n  \"latitude\": -6.2088,\n  \"longitude\": 106.8456,\n  \"locationName\": \"Contoh lokasi laporan\",\n  \"photoUrls\": [\n    \"https://example.com/road-1.jpg\",\n    \"https://example.com/road-2.jpg\"\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/reports"
+          }
+        },
+        {
+          "name": "Get Nearby Reports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reports/nearby?latitude=-6.2088&longitude=106.8456&radiusKm=10"
+          }
+        },
+        {
+          "name": "Get My Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{citizenToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/reports/my-reports"
+          }
+        },
+        {
+          "name": "Resubmit Rejected Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{citizenToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Keterangan laporan diperbarui agar lebih jelas.\"\n}"
+            },
+            "url": "{{baseUrl}}/api/reports/{{reportId}}/resubmit"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Officer Reports",
+      "item": [
+        {
+          "name": "List and Filter Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{officerToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/officer/reports?status=DILAPORKAN&severity=PARAH"
+          }
+        },
+        {
+          "name": "Verify Report",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{officerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newStatus\": \"DIVERIFIKASI\",\n  \"note\": \"Laporan telah diverifikasi.\"\n}"
+            },
+            "url": "{{baseUrl}}/api/reports/{{reportId}}/status"
+          }
+        },
+        {
+          "name": "Reject Report",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{officerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newStatus\": \"DITOLAK\",\n  \"rejectReason\": \"FOTO_TIDAK_JELAS\",\n  \"note\": \"Mohon unggah foto yang lebih jelas.\"\n}"
+            },
+            "url": "{{baseUrl}}/api/reports/{{reportId}}/status"
+          }
+        },
+        {
+          "name": "Mark Report Fixed",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{officerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newStatus\": \"DIPERBAIKI\",\n  \"note\": \"Perbaikan jalan telah selesai.\"\n}"
+            },
+            "url": "{{baseUrl}}/api/reports/{{reportId}}/status"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "newCitizenEmail", "value": "" },
+    { "key": "newCitizenPassword", "value": "" },
+    { "key": "citizenEmail", "value": "" },
+    { "key": "citizenPassword", "value": "" },
+    { "key": "officerEmail", "value": "" },
+    { "key": "officerPassword", "value": "" },
+    { "key": "citizenToken", "value": "" },
+    { "key": "officerToken", "value": "" },
+    { "key": "token", "value": "" },
+    { "key": "reportId", "value": "" }
+  ]
+}
