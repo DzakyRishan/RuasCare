@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RuasCare — Opsi GPS</title>
+  <style>
+    :root { --blue:#1a56db; --sky:#0284c7; --surface:#f8f9ff; --card:#fff; --text:#1c1b20; --muted:#62636c; --border:#c6c6d0; --warn:#b45309; --warn-bg:#fff7ed; --success:#166534; --success-bg:#effdf3; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--surface); color:var(--text); font:15px/1.45 Arial,sans-serif; padding:32px; }
+    h1 { margin:0 0 6px; font-size:28px; } .lead { color:var(--muted); margin:0 0 28px; } .options { display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:24px; max-width:1050px; }
+    .option { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; box-shadow:0 3px 12px #1a56db0d; } .option.recommended { border:2px solid var(--blue); }
+    .tag { display:inline-block; background:#eaf0ff; color:var(--blue); font-weight:700; padding:4px 9px; border-radius:99px; font-size:12px; } h2 { margin:12px 0 5px; font-size:21px; } .description { min-height:48px; color:var(--muted); }
+    .phone { margin-top:18px; border:1px solid #dddde6; border-radius:18px; overflow:hidden; background:#fff; } .bar { padding:13px 16px; border-bottom:1px solid #eee; font-weight:700; } .form { padding:16px; } .field { border:1px solid var(--border); border-radius:10px; padding:11px 12px; margin-bottom:12px; color:#4c4d58; }
+    .location { border-radius:12px; padding:13px; margin:12px 0; } .location.warn { border:1px solid #fed7aa; background:var(--warn-bg); color:#7c2d12; } .location.success { border:1px solid #bbf7d0; background:var(--success-bg); color:#14532d; } .small { display:block; font-size:12px; margin-top:4px; }
+    button { width:100%; border:0; border-radius:10px; min-height:44px; color:white; font-weight:700; background:var(--blue); font-size:14px; } button.secondary { margin-top:8px; background:#fff; color:var(--blue); border:1px solid var(--blue); } button.disabled { background:#a7a8b1; }
+    .points { margin:16px 0 0; padding-left:20px; } .points li { margin:7px 0; } .recommendation { max-width:1050px; margin-top:24px; border-left:4px solid var(--blue); padding:14px 16px; background:#eef3ff; border-radius:0 10px 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>RuasCare — Pengambilan Lokasi GPS</h1>
+  <p class="lead">Mockup untuk form “Buat Laporan”. Lokasi wajib tersedia sebelum laporan dapat dikirim.</p>
+  <section class="options">
+    <article class="option recommended">
+      <span class="tag">REKOMENDASI · OPSI A</span>
+      <h2>Ambil lokasi sebelum kirim</h2>
+      <p class="description">Warga menekan tombol lokasi, melihat koordinat dan akurasi, lalu mengirim laporan setelah lokasi valid.</p>
+      <div class="phone">
+        <div class="bar">Buat Laporan Baru</div>
+        <div class="form">
+          <div class="field">Lokasi / Nama Jalan</div>
+          <div class="location success"><strong>✓ Lokasi berhasil diambil</strong><span class="small">-6.175392, 106.827153 · Akurasi ±8 m</span></div>
+          <button class="secondary">↻ Perbarui Lokasi GPS</button>
+          <div class="field" style="margin-top:12px">Deskripsi Kerusakan</div>
+          <button>Kirim Laporan</button>
+        </div>
+      </div>
+      <ul class="points"><li>Koordinat jelas sebelum submit.</li><li>Izin ditolak atau GPS mati langsung terlihat.</li><li>Tombol kirim nonaktif bila lokasi belum valid.</li></ul>
+    </article>
+    <article class="option">
+      <span class="tag">OPSI B</span>
+      <h2>Ambil lokasi saat kirim</h2>
+      <p class="description">Form tetap ringkas. GPS baru diambil otomatis saat warga menekan “Kirim Laporan”.</p>
+      <div class="phone">
+        <div class="bar">Buat Laporan Baru</div>
+        <div class="form">
+          <div class="field">Lokasi / Nama Jalan</div>
+          <div class="location warn"><strong>◎ Lokasi akan diambil saat laporan dikirim</strong><span class="small">Aktifkan GPS perangkat untuk melanjutkan.</span></div>
+          <div class="field">Deskripsi Kerusakan</div>
+          <button class="disabled">Mengambil Lokasi…</button>
+        </div>
+      </div>
+      <ul class="points"><li>Form lebih ringkas.</li><li>Warga tidak melihat koordinat sebelum submit.</li><li>Gagal GPS terjadi di akhir proses pengisian.</li></ul>
+    </article>
+  </section>
+  <aside class="recommendation"><strong>Rekomendasi: Opsi A.</strong> Pelapor mendapat kontrol untuk mengulang lokasi dan mengetahui akurasi GPS sebelum mengirim laporan penting.</aside>
+</body>
+</html>
