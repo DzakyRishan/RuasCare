@@ -7,34 +7,43 @@ import 'package:lapor_jalan/features/auth/data/auth_repository_provider.dart';
 import 'package:lapor_jalan/features/auth/presentation/controllers/auth_controller.dart';
 
 /// Beranda Warga: pintasan ke buat laporan, laporan saya, dan peta sekitar.
+///
+/// Warna mengikuti tema aplikasi (`AppTheme`, biru) supaya sama dengan layar lain.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
-
-  static const Color _accent = Color(0xFFD7FF00);
 
   void _showHelp(BuildContext context) {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Cara Memakai RuasCare'),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('1. Tekan Buat Laporan, lalu isi lokasi jalan dan deskripsi.'),
-              SizedBox(height: 8),
-              Text('2. Aktifkan GPS dan lampirkan 2-3 foto kerusakan.'),
-              SizedBox(height: 8),
-              Text('3. Pantau status di Laporan Saya: Dilaporkan, Diverifikasi, '
-                  'lalu Diperbaiki.'),
-              SizedBox(height: 8),
-              Text('4. Jika laporan ditolak, baca alasannya lalu ajukan ulang '
-                  'dengan foto atau keterangan baru.'),
-              SizedBox(height: 16),
+              const Text(
+                '1. Tekan Buat Laporan, lalu isi lokasi jalan dan deskripsi.',
+              ),
+              const SizedBox(height: 8),
+              const Text('2. Aktifkan GPS dan lampirkan 2-3 foto kerusakan.'),
+              const SizedBox(height: 8),
+              const Text(
+                '3. Pantau status di Laporan Saya: Dilaporkan, Diverifikasi, '
+                'lalu Diperbaiki.',
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '4. Jika laporan ditolak, baca alasannya lalu ajukan ulang '
+                'dengan foto atau keterangan baru.',
+              ),
+              const SizedBox(height: 16),
               Text(
                 AppConstants.officialDisclaimer,
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -52,9 +61,9 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authRepositoryProvider).currentUser;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111111),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -65,13 +74,13 @@ class HomeScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'RUASCARE.',
                         style: TextStyle(
-                          color: _accent,
+                          color: scheme.primary,
                           fontSize: 28,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -1,
@@ -79,18 +88,24 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       Text(
                         'Your Road, Our Responsibility.',
-                        style: TextStyle(color: Colors.white54, fontSize: 12),
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white10,
+                      color: scheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: PopupMenuButton<String>(
                       tooltip: 'Akun',
-                      icon: const Icon(Icons.person_outline, color: Colors.white),
+                      icon: Icon(
+                        Icons.person_outline,
+                        color: scheme.onPrimaryContainer,
+                      ),
                       onSelected: (value) {
                         if (value == 'logout') {
                           ref.read(authControllerProvider.notifier).logout();
@@ -101,13 +116,16 @@ class HomeScreen extends ConsumerWidget {
                           enabled: false,
                           child: Text(user?.name ?? 'Warga'),
                         ),
-                        const PopupMenuItem<String>(
+                        PopupMenuItem<String>(
                           value: 'logout',
                           child: Row(
                             children: [
-                              Icon(Icons.logout, size: 18, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text('Keluar', style: TextStyle(color: Colors.red)),
+                              Icon(Icons.logout, size: 18, color: scheme.error),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Keluar',
+                                style: TextStyle(color: scheme.error),
+                              ),
                             ],
                           ),
                         ),
@@ -122,7 +140,7 @@ class HomeScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: _accent,
+                  color: scheme.primary,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Row(
@@ -131,10 +149,10 @@ class HomeScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Lapor Cepat!',
                             style: TextStyle(
-                              color: Colors.black,
+                              color: scheme.onPrimary,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
@@ -143,7 +161,7 @@ class HomeScreen extends ConsumerWidget {
                           Text(
                             'Temukan jalan rusak? Langsung buat laporan.',
                             style: TextStyle(
-                              color: Colors.black.withValues(alpha: 0.7),
+                              color: scheme.onPrimary.withValues(alpha: 0.85),
                             ),
                           ),
                         ],
@@ -151,22 +169,22 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: scheme.onPrimary,
                         shape: const CircleBorder(),
                         padding: const EdgeInsets.all(16),
                       ),
                       onPressed: () => context.push(AppRoutes.createReport),
-                      child: const Icon(Icons.bolt, color: _accent),
+                      child: Icon(Icons.bolt, color: scheme.primary),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 32),
 
-              const Text(
+              Text(
                 'Menu Utama',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: scheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -182,24 +200,28 @@ class HomeScreen extends ConsumerWidget {
                 childAspectRatio: 1.1,
                 children: [
                   _buildMenuCard(
+                    scheme,
                     'Buat Laporan',
                     'Formulir detail',
                     Icons.add_road,
                     () => context.push(AppRoutes.createReport),
                   ),
                   _buildMenuCard(
+                    scheme,
                     'Laporan Saya',
                     'Cek status',
                     Icons.history,
                     () => context.push(AppRoutes.myReports),
                   ),
                   _buildMenuCard(
+                    scheme,
                     'Peta Sekitar',
                     'Pantau jalan',
                     Icons.map_outlined,
                     () => context.push(AppRoutes.nearbyReports),
                   ),
                   _buildMenuCard(
+                    scheme,
                     'Bantuan',
                     'Panduan app',
                     Icons.help_outline,
@@ -215,6 +237,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildMenuCard(
+    ColorScheme scheme,
     String title,
     String subtitle,
     IconData icon,
@@ -226,28 +249,31 @@ class HomeScreen extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white10),
+          border: Border.all(color: scheme.outlineVariant),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: _accent, size: 32),
+            Icon(icon, color: scheme.primary, size: 32),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: scheme.onSurface,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(color: Colors.white54, fontSize: 11),
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
                 ),
               ],
             ),

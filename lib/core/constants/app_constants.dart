@@ -8,6 +8,14 @@ abstract final class AppConstants {
       'Aplikasi ini adalah perantara pihak ketiga dan bukan kanal resmi '
       'pemerintah.';
 
+  /// Alamat backend. Default untuk Flutter Web di laptop yang sama. Ganti saat
+  /// menjalankan, misalnya emulator Android memakai alamat khusus ke laptop:
+  /// `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080`.
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://localhost:8080',
+  );
+
   /// PRD §8: radius default saat app dibuka.
   static const double defaultRadiusKm = 5;
 

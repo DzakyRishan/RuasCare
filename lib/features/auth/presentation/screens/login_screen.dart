@@ -3,13 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lapor_jalan/core/constants/app_constants.dart';
 import 'package:lapor_jalan/core/router/app_routes.dart';
-import 'package:lapor_jalan/features/auth/data/fake/fake_users.dart';
 import 'package:lapor_jalan/features/auth/presentation/controllers/auth_controller.dart';
 
 /// Layar Login pengguna (Warga dan Petugas).
 ///
-/// Menyertakan disclaimer resmi pihak ketiga (PRD §8) dan shortcut akun demo
-/// untuk memudahkan peninjau portofolio mencoba kedua peran (PRD §5).
+/// Menyertakan disclaimer resmi pihak ketiga (PRD §8). Warga membuat akun lewat
+/// halaman Daftar, sedangkan akun Petugas disiapkan langsung di database.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -28,12 +27,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  void _fillDemoAccount(String email) {
-    _emailController.text = email;
-    _passwordController.text = FakeUsers.demoPassword;
-    ref.read(authControllerProvider.notifier).clearErrors();
   }
 
   Future<void> _handleLogin() async {
@@ -248,45 +241,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ? null
                               : () => context.go(AppRoutes.register),
                           child: const Text('Daftar Akun Warga'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    const Divider(),
-                    const SizedBox(height: 12),
-
-                    // Bagian Akun Demo Portofolio (PRD §5)
-                    Text(
-                      'PILIH AKUN DEMO (PORTOFOLIO)',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.outline,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.person_outline, size: 18),
-                            label: const Text('Warga (Budi)'),
-                            onPressed: authState.isLoading
-                                ? null
-                                : () => _fillDemoAccount(FakeUsers.budi.email),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.badge_outlined, size: 18),
-                            label: const Text('Petugas (Rina)'),
-                            onPressed: authState.isLoading
-                                ? null
-                                : () => _fillDemoAccount(FakeUsers.petugas.email),
-                          ),
                         ),
                       ],
                     ),

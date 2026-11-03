@@ -27,6 +27,11 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // HTTP polos ke backend demo di LAN hanya aktif kalau build dijalankan dengan
+        // -PallowCleartext=true. Default-nya false, jadi release tetap menolak HTTP tanpa TLS.
+        manifestPlaceholders["usesCleartextTraffic"] =
+            providers.gradleProperty("allowCleartext").getOrElse("false")
     }
 
     buildTypes {

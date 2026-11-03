@@ -45,7 +45,7 @@ Kriteria keberhasilan (definition of done MVP):
 | Warga | Pengguna umum yang melaporkan jalan rusak | Membuat laporan, melihat laporan di sekitar (maks 10 km), mengelola laporan sendiri |
 | Petugas | Petugas dinas yang menindaklanjuti laporan | Melihat semua laporan tanpa batas radius, mengubah status, menolak dengan alasan |
 
-Kedua peran adalah akun di dalam app yang sama. Layar yang tampil ditentukan oleh role. Untuk portofolio, akun petugas dibuat sebagai akun demo.
+Kedua peran adalah akun di dalam app yang sama. Layar yang tampil ditentukan oleh role. Warga membuat akun sendiri lewat halaman Daftar. Akun petugas tidak bisa didaftarkan dari app, jadi disiapkan langsung di database.
 
 ## 6. Fitur MVP dan User Stories
 

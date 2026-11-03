@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:lapor_jalan/core/constants/app_constants.dart';
 import 'package:lapor_jalan/features/auth/data/api_auth_repository.dart';
 import 'package:lapor_jalan/features/auth/domain/auth_repository.dart';
 
@@ -23,7 +24,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final repository = ApiAuthRepository(
     dio: dio,
     secureStorage: storage,
-    baseUrl: 'http://localhost:8080',
+    baseUrl: AppConstants.apiBaseUrl,
   );
   
   ref.onDispose(repository.dispose);
