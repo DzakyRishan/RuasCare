@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lapor_jalan/features/reports/data/report_repository_provider.dart';
-import 'package:lapor_jalan/features/reports/domain/report_repository.dart';
 import 'package:lapor_jalan/features/reports/domain/report_inputs.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
+import 'package:lapor_jalan/features/reports/domain/report_repository.dart';
 
 final resubmitReportControllerProvider =
     StateNotifierProvider.autoDispose<ResubmitReportController, AsyncValue<void>>(
@@ -15,13 +16,13 @@ class ResubmitReportController extends StateNotifier<AsyncValue<void>> {
 
   Future<bool> resubmitReport({
     required int reportId,
-    List<String>? photoUrls,
+    List<ReportPhoto> photos = const [],
     String? description,
   }) async {
     state = const AsyncValue.loading();
     try {
       final input = ResubmitReportInput(
-        photoUrls: photoUrls,
+        photos: photos,
         description: description,
       );
 

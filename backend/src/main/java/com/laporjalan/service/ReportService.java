@@ -1,7 +1,6 @@
 package com.laporjalan.service;
 
 import com.laporjalan.dto.request.CreateReportRequest;
-import com.laporjalan.dto.request.ResubmitReportRequest;
 import com.laporjalan.dto.request.UpdateReportRequest;
 import com.laporjalan.dto.request.UpdateReportStatusRequest;
 import com.laporjalan.dto.response.ReportResponse;
@@ -15,8 +14,11 @@ import com.laporjalan.repository.ReportStatusLogRepository;
 import com.laporjalan.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -65,13 +67,44 @@ public class ReportService {
         return mapReport(report, false, isMine, true);
     }
 
-    public ReportResponse updateReport(Long reportId, String reporterEmail, UpdateReportRequest request) {
+    public ReportResponse updateReport(
+            Long reportId,
+            String reporterEmail,
+            UpdateReportRequest request,
+            List<MultipartFile> newPhotos) {
         Report report = getReport(reportId);
         assertOwner(report, reporterEmail);
 
         if (report.getStatus() != ReportStatus.DILAPORKAN) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "Only reported reports can be updated");
+        }
+
+        List<String> currentUrls = List.of(report.getPhotoUrls());
+        List<String> storedNewUrls = List.of();
+        List<String> removedUrls = List.of();
+        boolean photosChanged = request.getKeepPhotoUrls() != null
+                || (newPhotos != null && !newPhotos.isEmpty());
+
+        if (photosChanged) {
+            List<String> keepUrls = request.getKeepPhotoUrls() == null
+                    ? List.of()
+                    : request.getKeepPhotoUrls();
+            // Foto yang dipertahankan harus benar-benar milik laporan ini.
+            if (!currentUrls.containsAll(keepUrls) || new HashSet<>(keepUrls).size() != keepUrls.size()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid photos to keep");
+            }
+            int totalPhotos = keepUrls.size() + (newPhotos == null ? 0 : newPhotos.size());
+            if (totalPhotos < 2 || totalPhotos > 3) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "A report must have between 2 and 3 photos");
+            }
+
+            storedNewUrls = photoStorageService.storePhotos(newPhotos, 0, 3);
+            List<String> finalUrls = new ArrayList<>(keepUrls);
+            finalUrls.addAll(storedNewUrls);
+            report.setPhotoUrls(finalUrls.toArray(new String[0]));
+            removedUrls = currentUrls.stream().filter(url -> !keepUrls.contains(url)).toList();
         }
 
         if (request.getDescription() != null) {
@@ -89,17 +122,22 @@ public class ReportService {
         if (request.getLocationName() != null) {
             report.setLocationName(request.getLocationName());
         }
-        if (request.getPhotoUrls() != null) {
-            report.setPhotoUrls(request.getPhotoUrls().toArray(new String[0]));
+        Report savedReport;
+        try {
+            savedReport = reportRepository.save(report);
+        } catch (RuntimeException exception) {
+            photoStorageService.deletePhotos(storedNewUrls);
+            throw exception;
         }
-
-        return mapToPrivateResponse(reportRepository.save(report));
+        photoStorageService.deletePhotos(removedUrls);
+        return mapToPrivateResponse(savedReport);
     }
 
     public ReportResponse resubmitReport(
             Long reportId,
             String reporterEmail,
-            ResubmitReportRequest request) {
+            String description,
+            List<MultipartFile> photos) {
         Report report = getReport(reportId);
         User reporter = getUserByEmail(reporterEmail);
         assertOwner(report, reporterEmail);
@@ -109,18 +147,41 @@ public class ReportService {
                     HttpStatus.CONFLICT, "Only rejected reports can be resubmitted");
         }
 
-        if (request.getDescription() != null && !request.getDescription().trim().isEmpty()) {
-            report.setDescription(request.getDescription().trim());
+        boolean hasDescription = description != null && !description.trim().isEmpty();
+        boolean hasPhotos = photos != null && !photos.isEmpty();
+        if (!hasDescription && !hasPhotos) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Provide a new description or 2-3 new photos");
         }
-        if (request.getPhotoUrls() != null && !request.getPhotoUrls().isEmpty()) {
-            report.setPhotoUrls(request.getPhotoUrls().toArray(new String[0]));
+        if (hasDescription && description.trim().length() > 1000) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Description must not exceed 1000 characters");
+        }
+
+        List<String> oldUrls = List.of(report.getPhotoUrls());
+        List<String> newUrls = hasPhotos ? photoStorageService.storeReportPhotos(photos) : List.of();
+
+        if (hasDescription) {
+            report.setDescription(description.trim());
+        }
+        if (hasPhotos) {
+            report.setPhotoUrls(newUrls.toArray(new String[0]));
         }
 
         report.setStatus(ReportStatus.DILAPORKAN);
         report.setRejectReason(null);
         report.setRejectNote(null);
 
-        Report savedReport = reportRepository.save(report);
+        Report savedReport;
+        try {
+            savedReport = reportRepository.save(report);
+        } catch (RuntimeException exception) {
+            photoStorageService.deletePhotos(newUrls);
+            throw exception;
+        }
+        if (hasPhotos) {
+            photoStorageService.deletePhotos(oldUrls);
+        }
         saveStatusLog(
                 savedReport,
                 ReportStatus.DITOLAK,
@@ -160,6 +221,12 @@ public class ReportService {
                     "Invalid report status transition from " + oldStatus + " to " + newStatus);
         }
 
+        if (newStatus == ReportStatus.DIPERBAIKI) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Repair photos are required. Use the fix endpoint to mark a report as fixed");
+        }
+
         if (newStatus == ReportStatus.DITOLAK && request.getRejectReason() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reject reason is required");
         }
@@ -172,6 +239,39 @@ public class ReportService {
 
         Report savedReport = reportRepository.save(report);
         saveStatusLog(savedReport, oldStatus, newStatus, officer, request.getNote());
+        return mapToPrivateResponse(savedReport);
+    }
+
+    /** Petugas menandai laporan selesai diperbaiki, wajib dengan foto bukti. */
+    public ReportResponse markReportFixed(
+            Long reportId,
+            String officerEmail,
+            String note,
+            List<MultipartFile> repairPhotos) {
+        Report report = getReport(reportId);
+        User officer = getUserByEmail(officerEmail);
+
+        if (report.getStatus() != ReportStatus.DIVERIFIKASI) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Only verified reports can be marked as fixed");
+        }
+        if (note != null && note.length() > 500) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Note must not exceed 500 characters");
+        }
+
+        List<String> repairUrls = photoStorageService.storeRepairPhotos(repairPhotos);
+        report.setStatus(ReportStatus.DIPERBAIKI);
+        report.setRepairPhotoUrls(repairUrls.toArray(new String[0]));
+
+        Report savedReport;
+        try {
+            savedReport = reportRepository.save(report);
+        } catch (RuntimeException exception) {
+            photoStorageService.deletePhotos(repairUrls);
+            throw exception;
+        }
+        saveStatusLog(savedReport, ReportStatus.DIVERIFIKASI, ReportStatus.DIPERBAIKI, officer, note);
         return mapToPrivateResponse(savedReport);
     }
 
@@ -277,6 +377,9 @@ public class ReportService {
         response.setLongitude(report.getLongitude());
         response.setLocationName(report.getLocationName());
         response.setPhotoUrls(List.of(report.getPhotoUrls()));
+        response.setRepairPhotoUrls(report.getRepairPhotoUrls() == null
+                ? List.of()
+                : List.of(report.getRepairPhotoUrls()));
         response.setRejectReason(report.getRejectReason());
         response.setRejectNote(report.getRejectNote());
         response.setMine(isMine);

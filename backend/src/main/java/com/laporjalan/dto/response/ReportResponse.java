@@ -22,6 +22,7 @@ public class ReportResponse {
     private Double longitude;
     private String locationName;
     private List<String> photoUrls;
+    private List<String> repairPhotoUrls = List.of();
     private RejectReason rejectReason;
     private String rejectNote;
     @JsonProperty("isMine")

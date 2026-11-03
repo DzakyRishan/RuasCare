@@ -3,6 +3,7 @@ import 'package:lapor_jalan/features/reports/domain/report.dart';
 import 'package:lapor_jalan/features/reports/domain/report_repository.dart';
 import 'package:lapor_jalan/features/reports/domain/report_enums.dart';
 import 'package:lapor_jalan/features/reports/domain/report_inputs.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
 import 'package:lapor_jalan/features/reports/data/report_repository_provider.dart';
 
 final officerDashboardControllerProvider =
@@ -39,6 +40,7 @@ class OfficerDashboardController extends StateNotifier<AsyncValue<List<Report>>>
     required ReportStatus newStatus,
     RejectReason? rejectReason,
     String? note,
+    List<ReportPhoto> repairPhotos = const [],
   }) async {
     try {
       await _repository.updateReportStatus(
@@ -47,6 +49,7 @@ class OfficerDashboardController extends StateNotifier<AsyncValue<List<Report>>>
           newStatus: newStatus,
           rejectReason: rejectReason,
           note: note,
+          repairPhotos: repairPhotos,
         ),
       );
       await loadReports(status: _statusFilter, severity: _severityFilter);

@@ -6,6 +6,7 @@ import 'package:lapor_jalan/features/auth/domain/user.dart';
 import 'package:lapor_jalan/features/reports/domain/report.dart';
 import 'package:lapor_jalan/features/reports/domain/report_enums.dart';
 import 'package:lapor_jalan/features/reports/domain/report_inputs.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
 import 'package:lapor_jalan/features/reports/domain/report_repository.dart';
 
 /// Implementasi [ReportRepository] yang connect ke Spring Boot backend.
@@ -125,11 +126,16 @@ class ApiReportRepository implements ReportRepository {
       if (input.severity != null) data['severity'] = input.severity!.name.toUpperCase();
       if (input.latitude != null) data['latitude'] = input.latitude;
       if (input.longitude != null) data['longitude'] = input.longitude;
-      if (input.photoUrls != null) data['photoUrls'] = input.photoUrls;
+      if (input.hasPhotoChanges) {
+        // Backend mencocokkan path relatif (/uploads/...), bukan URL penuh.
+        data['keepPhotoUrls'] =
+            (input.keepPhotoUrls ?? const <String>[]).map(_toStoredPhotoPath).toList();
+        data['photos'] = _toMultipartFiles(input.newPhotos);
+      }
 
       final response = await _dio.put(
         '$_baseUrl/api/reports/$id',
-        data: data,
+        data: FormData.fromMap(data),
         options: Options(headers: headers),
       );
       return _mapFromJson(response.data);
@@ -157,10 +163,10 @@ class ApiReportRepository implements ReportRepository {
       final headers = await _getHeaders();
       final response = await _dio.post(
         '$_baseUrl/api/reports/$id/resubmit',
-        data: {
+        data: FormData.fromMap({
           if (input.description != null) 'description': input.description,
-          if (input.photoUrls != null) 'photoUrls': input.photoUrls,
-        },
+          if (input.photos.isNotEmpty) 'photos': _toMultipartFiles(input.photos),
+        }),
         options: Options(headers: headers),
       );
       return _mapFromJson(response.data);
@@ -196,6 +202,20 @@ class ApiReportRepository implements ReportRepository {
   Future<Report> updateReportStatus(int id, UpdateReportStatusInput input) async {
     try {
       final headers = await _getHeaders();
+
+      // Status Diperbaiki wajib membawa foto bukti, jadi lewat endpoint /fix.
+      if (input.newStatus == ReportStatus.diperbaiki) {
+        final fixResponse = await _dio.post(
+          '$_baseUrl/api/reports/$id/fix',
+          data: FormData.fromMap({
+            if (input.note != null) 'note': input.note,
+            'photos': _toMultipartFiles(input.repairPhotos),
+          }),
+          options: Options(headers: headers),
+        );
+        return _mapFromJson(fixResponse.data);
+      }
+
       final response = await _dio.put(
         '$_baseUrl/api/reports/$id/status',
         data: {
@@ -227,6 +247,9 @@ class ApiReportRepository implements ReportRepository {
       photoUrls: List<String>.from(json['photoUrls'] ?? [])
           .map(_resolvePhotoUrl)
           .toList(),
+      repairPhotoUrls: List<String>.from(json['repairPhotoUrls'] ?? [])
+          .map(_resolvePhotoUrl)
+          .toList(),
       rejectReason: json['rejectReason'] != null
           ? _rejectReasonFromApi(json['rejectReason'].toString())
           : null,
@@ -244,6 +267,18 @@ class ApiReportRepository implements ReportRepository {
           : null,
       statusHistory: _mapStatusHistory(json['statusHistory']),
     );
+  }
+
+  List<MultipartFile> _toMultipartFiles(List<ReportPhoto> photos) {
+    return photos
+        .map((photo) => MultipartFile.fromBytes(photo.bytes, filename: photo.fileName))
+        .toList();
+  }
+
+  /// Kebalikan [_resolvePhotoUrl]: membuang base URL agar sama dengan yang
+  /// disimpan backend.
+  String _toStoredPhotoPath(String url) {
+    return url.startsWith(_baseUrl) ? url.substring(_baseUrl.length) : url;
   }
 
   String _resolvePhotoUrl(String value) {

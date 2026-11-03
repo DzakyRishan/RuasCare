@@ -30,8 +30,25 @@ public class ReportPhotoStorageService {
                 .resolve("reports");
     }
 
+    /** Foto laporan warga: wajib 2-3 foto. */
     public List<String> storeReportPhotos(List<MultipartFile> photos) {
-        validatePhotoCount(photos);
+        return storePhotos(photos, MIN_PHOTO_COUNT, MAX_PHOTO_COUNT);
+    }
+
+    /** Foto bukti perbaikan dari petugas: wajib 1-3 foto. */
+    public List<String> storeRepairPhotos(List<MultipartFile> photos) {
+        return storePhotos(photos, 1, MAX_PHOTO_COUNT);
+    }
+
+    /**
+     * Menyimpan foto dengan batas jumlah yang ditentukan pemanggil. Jika
+     * {@code minCount} 0 dan tidak ada foto, hasilnya daftar kosong.
+     */
+    public List<String> storePhotos(List<MultipartFile> photos, int minCount, int maxCount) {
+        if (minCount == 0 && (photos == null || photos.isEmpty())) {
+            return List.of();
+        }
+        validatePhotoCount(photos, minCount, maxCount);
         createDirectoryIfNeeded();
 
         List<String> storedUrls = new ArrayList<>();
@@ -59,6 +76,10 @@ public class ReportPhotoStorageService {
 
     public void deletePhotos(List<String> photoUrls) {
         for (String photoUrl : photoUrls) {
+            // Hanya file yang disimpan server ini; URL eksternal diabaikan.
+            if (photoUrl == null || !photoUrl.startsWith("/uploads/reports/")) {
+                continue;
+            }
             try {
                 String fileName = Paths.get(photoUrl).getFileName().toString();
                 Path photoPath = reportPhotoDirectory.resolve(fileName).normalize();
@@ -71,11 +92,11 @@ public class ReportPhotoStorageService {
         }
     }
 
-    private void validatePhotoCount(List<MultipartFile> photos) {
-        if (photos == null || photos.size() < MIN_PHOTO_COUNT || photos.size() > MAX_PHOTO_COUNT) {
+    private void validatePhotoCount(List<MultipartFile> photos, int minCount, int maxCount) {
+        if (photos == null || photos.size() < minCount || photos.size() > maxCount) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Provide between 2 and 3 report photos");
+                    "Provide between " + minCount + " and " + maxCount + " photos");
         }
     }
 

@@ -59,6 +59,7 @@ class Report {
     required this.updatedAt,
     this.rejectReason,
     this.rejectNote,
+    this.repairPhotoUrls = const [],
     this.isMine = false,
     this.distanceKm,
     this.reporter,
@@ -81,6 +82,9 @@ class Report {
   /// Terisi hanya bila [status] = [ReportStatus.ditolak] (PRD §7).
   final RejectReason? rejectReason;
   final String? rejectNote;
+
+  /// Foto bukti perbaikan dari petugas. Terisi saat status Diperbaiki.
+  final List<String> repairPhotoUrls;
 
   /// True bila laporan milik pengguna yang sedang login.
   final bool isMine;
@@ -116,6 +120,7 @@ class Report {
     RejectReason? rejectReason,
     String? rejectNote,
     bool clearRejection = false,
+    List<String>? repairPhotoUrls,
     bool? isMine,
     double? distanceKm,
     bool clearDistance = false,
@@ -136,6 +141,7 @@ class Report {
       rejectReason:
           clearRejection ? null : (rejectReason ?? this.rejectReason),
       rejectNote: clearRejection ? null : (rejectNote ?? this.rejectNote),
+      repairPhotoUrls: repairPhotoUrls ?? this.repairPhotoUrls,
       isMine: isMine ?? this.isMine,
       distanceKm: clearDistance ? null : (distanceKm ?? this.distanceKm),
       reporter: clearReporter ? null : (reporter ?? this.reporter),

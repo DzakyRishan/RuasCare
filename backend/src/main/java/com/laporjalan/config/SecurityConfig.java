@@ -51,6 +51,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/error", "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        // Role dicek di level URL (sebelum body dibaca), selain @PreAuthorize.
+                        .requestMatchers(HttpMethod.POST, "/api/reports/*/fix").hasRole("OFFICER")
+                        .requestMatchers(HttpMethod.PUT, "/api/reports/*/status").hasRole("OFFICER")
+                        .requestMatchers(HttpMethod.POST, "/api/reports", "/api/reports/*/resubmit").hasRole("CITIZEN")
+                        .requestMatchers(HttpMethod.PUT, "/api/reports/*").hasRole("CITIZEN")
                         .requestMatchers(HttpMethod.GET,
                                 "/api/reports/my-reports",
                                 "/api/reports/all",

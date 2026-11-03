@@ -196,12 +196,7 @@ class FakeReportRepository implements ReportRepository {
         'location': ['Latitude dan longitude harus diubah bersamaan.'],
       ..._coordinateErrors(latitude, longitude),
       if (input.description != null) ..._descriptionErrors(input.description!),
-      if (input.photoUrls != null && input.photoUrls!.isEmpty)
-        'photo': ['Minimal 2 foto wajib dilampirkan.'],
-      if (input.photoUrls != null && input.photoUrls!.length < 2)
-        'photo': ['Minimal 2 foto wajib dilampirkan.'],
-      if (input.photoUrls != null && input.photoUrls!.length > 3)
-        'photo': ['Maksimal 3 foto per laporan.'],
+      if (input.hasPhotoChanges) ..._editedPhotoErrors(record, input),
     };
     _throwIfInvalid(fieldErrors);
 
@@ -210,8 +205,12 @@ class FakeReportRepository implements ReportRepository {
       severity: input.severity,
       latitude: latitude,
       longitude: longitude,
-      photoUrls:
-          input.photoUrls?.map((p) => _localPhotoUri(p)).toList(),
+      photoUrls: input.hasPhotoChanges
+          ? [
+              ...?input.keepPhotoUrls,
+              ...input.newPhotos.map((p) => _localPhotoUri(p.fileName)),
+            ]
+          : null,
       updatedAt: DateTime.now(),
     );
     return _present(record, viewer, includeHistory: true);
@@ -253,11 +252,9 @@ class FakeReportRepository implements ReportRepository {
     final fieldErrors = <String, List<String>>{
       if (newDescription != null && newDescription.isNotEmpty)
         ..._descriptionErrors(newDescription),
-      if (input.photoUrls != null && input.photoUrls!.isEmpty)
+      if (input.photos.isNotEmpty && input.photos.length < 2)
         'photo': ['Minimal 2 foto wajib dilampirkan.'],
-      if (input.photoUrls != null && input.photoUrls!.length < 2)
-        'photo': ['Minimal 2 foto wajib dilampirkan.'],
-      if (input.photoUrls != null && input.photoUrls!.length > 3)
+      if (input.photos.length > 3)
         'photo': ['Maksimal 3 foto per laporan.'],
     };
     _throwIfInvalid(fieldErrors);
@@ -268,8 +265,9 @@ class FakeReportRepository implements ReportRepository {
       description: (newDescription == null || newDescription.isEmpty)
           ? null
           : newDescription,
-      photoUrls:
-          input.photoUrls?.map((p) => _localPhotoUri(p)).toList(),
+      photoUrls: input.photos.isEmpty
+          ? null
+          : input.photos.map((p) => _localPhotoUri(p.fileName)).toList(),
       clearRejection: true,
       updatedAt: now,
       statusHistory: _appendLog(
@@ -309,6 +307,10 @@ class FakeReportRepository implements ReportRepository {
     final fieldErrors = <String, List<String>>{
       if (target == ReportStatus.ditolak && input.rejectReason == null)
         'reject_reason': ['Alasan penolakan wajib dipilih.'],
+      if (target == ReportStatus.diperbaiki && input.repairPhotos.isEmpty)
+        'photo': ['Foto bukti perbaikan wajib dilampirkan.'],
+      if (target == ReportStatus.diperbaiki && input.repairPhotos.length > 3)
+        'photo': ['Maksimal 3 foto bukti perbaikan.'],
       if (note != null && note.length > AppConstants.statusNoteMaxLength)
         'note': [
           'Catatan maksimal ${AppConstants.statusNoteMaxLength} karakter.',
@@ -338,10 +340,32 @@ class FakeReportRepository implements ReportRepository {
         : record.report.copyWith(
             status: target,
             clearRejection: true,
+            repairPhotoUrls: target == ReportStatus.diperbaiki
+                ? input.repairPhotos
+                    .map((p) => _localPhotoUri(p.fileName))
+                    .toList()
+                : null,
             updatedAt: now,
             statusHistory: history,
           );
     return _present(record, viewer, includeHistory: true);
+  }
+
+  /// Validasi total foto saat edit: foto lama yang dipertahankan ditambah
+  /// foto baru harus 2-3.
+  Map<String, List<String>> _editedPhotoErrors(
+    FakeReportRecord record,
+    UpdateReportInput input,
+  ) {
+    final keep = input.keepPhotoUrls ?? const <String>[];
+    final foreign = keep.where((url) => !record.report.photoUrls.contains(url));
+    final total = keep.length + input.newPhotos.length;
+    if (foreign.isNotEmpty) {
+      return {'photo': ['Foto yang dipertahankan tidak valid.']};
+    }
+    if (total < 2) return {'photo': ['Minimal 2 foto wajib dilampirkan.']};
+    if (total > 3) return {'photo': ['Maksimal 3 foto per laporan.']};
+    return const {};
   }
 
   // ---------------------------------------------------------------- helper

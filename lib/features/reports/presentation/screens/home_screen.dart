@@ -1,20 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lapor_jalan/core/constants/app_constants.dart';
+import 'package:lapor_jalan/core/router/app_routes.dart';
+import 'package:lapor_jalan/features/auth/data/auth_repository_provider.dart';
+import 'package:lapor_jalan/features/auth/presentation/controllers/auth_controller.dart';
 
-class HomeScreen extends StatelessWidget {
+/// Beranda Warga: pintasan ke buat laporan, laporan saya, dan peta sekitar.
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+  static const Color _accent = Color(0xFFD7FF00);
+
+  void _showHelp(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Cara Memakai RuasCare'),
+        content: const SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('1. Tekan Buat Laporan, lalu isi lokasi jalan dan deskripsi.'),
+              SizedBox(height: 8),
+              Text('2. Aktifkan GPS dan lampirkan 2-3 foto kerusakan.'),
+              SizedBox(height: 8),
+              Text('3. Pantau status di Laporan Saya: Dilaporkan, Diverifikasi, '
+                  'lalu Diperbaiki.'),
+              SizedBox(height: 8),
+              Text('4. Jika laporan ditolak, baca alasannya lalu ajukan ulang '
+                  'dengan foto atau keterangan baru.'),
+              SizedBox(height: 16),
+              Text(
+                AppConstants.officialDisclaimer,
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Mengerti'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authRepositoryProvider).currentUser;
+
     return Scaffold(
       backgroundColor: const Color(0xFF111111),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo & Header
+              // Logo & akun
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -24,14 +71,14 @@ class HomeScreen extends StatelessWidget {
                       Text(
                         'RUASCARE.',
                         style: TextStyle(
-                          color: Color(0xFFD7FF00),
+                          color: _accent,
                           fontSize: 28,
                           fontWeight: FontWeight.w900,
                           letterSpacing: -1,
                         ),
                       ),
                       Text(
-                        'Road Safety Portal',
+                        'Your Road, Our Responsibility.',
                         style: TextStyle(color: Colors.white54, fontSize: 12),
                       ),
                     ],
@@ -41,20 +88,41 @@ class HomeScreen extends StatelessWidget {
                       color: Colors.white10,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: IconButton(
+                    child: PopupMenuButton<String>(
+                      tooltip: 'Akun',
                       icon: const Icon(Icons.person_outline, color: Colors.white),
-                      onPressed: () => context.push('/profile'),
+                      onSelected: (value) {
+                        if (value == 'logout') {
+                          ref.read(authControllerProvider.notifier).logout();
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem<String>(
+                          enabled: false,
+                          child: Text(user?.name ?? 'Warga'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'logout',
+                          child: Row(
+                            children: [
+                              Icon(Icons.logout, size: 18, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Keluar', style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 40),
 
-              // Urgent Banner
+              // Banner lapor cepat
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD7FF00),
+                  color: _accent,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Row(
@@ -73,8 +141,10 @@ class HomeScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Kirim foto kerusakan parah dalam 5 detik.',
-                            style: TextStyle(color: Colors.black.withOpacity(0.7)),
+                            'Temukan jalan rusak? Langsung buat laporan.',
+                            style: TextStyle(
+                              color: Colors.black.withValues(alpha: 0.7),
+                            ),
                           ),
                         ],
                       ),
@@ -85,8 +155,8 @@ class HomeScreen extends StatelessWidget {
                         shape: const CircleBorder(),
                         padding: const EdgeInsets.all(16),
                       ),
-                      onPressed: () => context.push('/quick-report'),
-                      child: const Icon(Icons.bolt, color: Color(0xFFD7FF00)),
+                      onPressed: () => context.push(AppRoutes.createReport),
+                      child: const Icon(Icons.bolt, color: _accent),
                     ),
                   ],
                 ),
@@ -103,7 +173,6 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Menu Grid
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -113,32 +182,28 @@ class HomeScreen extends StatelessWidget {
                 childAspectRatio: 1.1,
                 children: [
                   _buildMenuCard(
-                    context,
                     'Buat Laporan',
                     'Formulir detail',
                     Icons.add_road,
-                    '/create-report',
+                    () => context.push(AppRoutes.createReport),
                   ),
                   _buildMenuCard(
-                    context,
                     'Laporan Saya',
                     'Cek status',
                     Icons.history,
-                    '/my-reports',
+                    () => context.push(AppRoutes.myReports),
                   ),
                   _buildMenuCard(
-                    context,
                     'Peta Sekitar',
                     'Pantau jalan',
                     Icons.map_outlined,
-                    '/nearby',
+                    () => context.push(AppRoutes.nearbyReports),
                   ),
                   _buildMenuCard(
-                    context,
                     'Bantuan',
                     'Panduan app',
                     Icons.help_outline,
-                    '/help',
+                    () => _showHelp(context),
                   ),
                 ],
               ),
@@ -149,14 +214,19 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuCard(BuildContext context, String title, String subtitle, IconData icon, String route) {
+  Widget _buildMenuCard(
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return InkWell(
-      onTap: () => context.push(route),
+      onTap: onTap,
       borderRadius: BorderRadius.circular(24),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: Colors.white10),
         ),
@@ -164,7 +234,7 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: const Color(0xFFD7FF00), size: 32),
+            Icon(icon, color: _accent, size: 32),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

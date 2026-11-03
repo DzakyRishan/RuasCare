@@ -5,6 +5,8 @@ import 'package:lapor_jalan/core/router/app_routes.dart';
 import 'package:lapor_jalan/features/reports/presentation/controllers/officer_dashboard_controller.dart';
 import 'package:lapor_jalan/features/reports/domain/report.dart';
 import 'package:lapor_jalan/features/reports/domain/report_enums.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
+import 'package:lapor_jalan/features/reports/presentation/widgets/report_photo_strip.dart';
 
 class OfficerDashboardScreen extends ConsumerStatefulWidget {
   const OfficerDashboardScreen({super.key});
@@ -114,36 +116,75 @@ class _OfficerDashboardScreenState extends ConsumerState<OfficerDashboardScreen>
 
   void _showFixedDialog(int reportId) {
     final noteController = TextEditingController();
+    final repairPhotos = <ReportPhoto>[];
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Tandai Selesai / Diperbaiki'),
-        content: TextField(
-          controller: noteController,
-          decoration: const InputDecoration(
-            labelText: 'Catatan Perbaikan (opsional)',
-            border: OutlineInputBorder(),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: const Text('Tandai Selesai / Diperbaiki'),
+          // Lebar tetap: AlertDialog menghitung lebar intrinsik isinya, dan
+          // ListView di ReportPhotoStrip tidak mendukung itu.
+          content: SizedBox(
+            width: 320,
+            child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Foto bukti perbaikan (1-3 foto, wajib)',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                ReportPhotoStrip(
+                  newPhotos: repairPhotos,
+                  onPhotoAdded: (photo) =>
+                      setStateDialog(() => repairPhotos.add(photo)),
+                  onNewPhotoRemoved: (index) =>
+                      setStateDialog(() => repairPhotos.removeAt(index)),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: noteController,
+                  decoration: const InputDecoration(
+                    labelText: 'Catatan Perbaikan (opsional)',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                ),
+              ],
+            ),
+            ),
           ),
-          maxLines: 2,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              // Tombol aktif hanya setelah ada foto bukti (PRD: foto perbaikan).
+              onPressed: repairPhotos.isEmpty
+                  ? null
+                  : () {
+                      ref.read(officerDashboardControllerProvider.notifier).updateStatus(
+                            reportId: reportId,
+                            newStatus: ReportStatus.diperbaiki,
+                            note: noteController.text.trim().isEmpty
+                                ? null
+                                : noteController.text.trim(),
+                            repairPhotos: List.of(repairPhotos),
+                          );
+                      Navigator.pop(dialogContext);
+                    },
+              child: const Text('Tandai Diperbaiki'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-            onPressed: () {
-              ref.read(officerDashboardControllerProvider.notifier).updateStatus(
-                reportId: reportId,
-                newStatus: ReportStatus.diperbaiki,
-                note: noteController.text.trim().isEmpty ? null : noteController.text.trim(),
-              );
-              Navigator.pop(context);
-            },
-            child: const Text('Tandai Diperbaiki'),
-          ),
-        ],
       ),
     );
   }

@@ -44,7 +44,7 @@ void main() {
         user: FakeUsers.budi,
         location: AppRoutes.officerReports,
       );
-      expect(redirect, equals(AppRoutes.nearbyReports));
+      expect(redirect, equals(AppRoutes.home));
     });
 
     test('Petugas is redirected away from citizen routes', () {
@@ -60,7 +60,7 @@ void main() {
         user: FakeUsers.budi,
         location: AppRoutes.login,
       );
-      expect(redirect, equals(AppRoutes.nearbyReports));
+      expect(redirect, equals(AppRoutes.home));
     });
   });
 
