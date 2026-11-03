@@ -5,7 +5,6 @@ import 'package:lapor_jalan/core/constants/app_constants.dart';
 import 'package:lapor_jalan/core/fake/fake_network.dart';
 import 'package:lapor_jalan/features/auth/data/auth_repository_provider.dart';
 import 'package:lapor_jalan/features/auth/data/fake/fake_auth_repository.dart';
-import 'package:lapor_jalan/features/auth/data/fake/fake_users.dart';
 import 'package:lapor_jalan/features/auth/presentation/screens/login_screen.dart';
 import 'package:lapor_jalan/features/auth/presentation/screens/register_screen.dart';
 
@@ -34,7 +33,7 @@ void main() {
   }
 
   group('LoginScreen Widget Tests', () {
-    testWidgets('renders all essential elements including disclaimer and demo buttons',
+    testWidgets('renders essential elements and no demo account shortcuts',
         (tester) async {
       await tester.pumpWidget(buildTestableWidget(const LoginScreen()));
 
@@ -46,31 +45,11 @@ void main() {
       expect(find.byType(TextFormField), findsNWidgets(2));
       expect(find.text('Masuk'), findsOneWidget);
 
-      // Tombol shortcut akun demo portofolio (PRD §5)
-      expect(find.text('Warga (Budi)'), findsOneWidget);
-      expect(find.text('Petugas (Rina)'), findsOneWidget);
-    });
-
-    testWidgets('tapping demo button fills email and password', (tester) async {
-      await tester.pumpWidget(buildTestableWidget(const LoginScreen()));
-
-      final demoBtn = find.text('Warga (Budi)');
-      await tester.ensureVisible(demoBtn);
-      await tester.tap(demoBtn);
-      await tester.pumpAndSettle();
-
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is EditableText && w.controller.text == FakeUsers.budi.email,
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is EditableText && w.controller.text == FakeUsers.demoPassword,
-        ),
-        findsOneWidget,
-      );
+      // Akun demo tidak lagi ditampilkan; warga mendaftar sendiri.
+      expect(find.textContaining('AKUN DEMO'), findsNothing);
+      expect(find.text('Warga (Budi)'), findsNothing);
+      expect(find.text('Petugas (Rina)'), findsNothing);
+      expect(find.text('Daftar Akun Warga'), findsOneWidget);
     });
 
     testWidgets('empty submission triggers form validation', (tester) async {
