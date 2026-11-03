@@ -1,11 +1,15 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- The INTERNET permission is required for development. Specifically,
          the Flutter tool needs it to communicate with the running application
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
-    <!-- Hanya build debug: izinkan HTTP ke backend lokal (10.0.2.2:8080).
-         Build release tetap memblokir HTTP tanpa TLS. -->
-    <application android:usesCleartextTraffic="true" />
+    <!-- Hanya build debug: selalu izinkan HTTP ke backend lokal (10.0.2.2:8080).
+         Manifest utama mengatur nilainya lewat placeholder (default false untuk
+         release), jadi di sini nilainya ditimpa secara eksplisit. -->
+    <application
+        android:usesCleartextTraffic="true"
+        tools:replace="android:usesCleartextTraffic" />
 </manifest>
