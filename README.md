@@ -97,7 +97,19 @@ flutter pub get
 flutter run
 ```
 
-Untuk Flutter Web lokal, base URL `http://localhost:8080` dapat dipakai. Untuk Android emulator, gunakan `http://10.0.2.2:8080`; untuk perangkat fisik, gunakan alamat IP LAN laptop.
+Alamat backend diatur lewat `--dart-define=API_BASE_URL`. Default-nya `http://localhost:8080`, cocok untuk Flutter Web.
+
+```powershell
+# Emulator Android (10.0.2.2 = laptop yang menjalankan emulator)
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080
+
+# HP Android asli: pakai IP LAN laptop, dan pastikan satu Wi-Fi
+flutter run --dart-define=API_BASE_URL=http://192.168.x.x:8080
+```
+
+Build debug mengizinkan HTTP ke backend lokal. Build release tetap memblokir HTTP tanpa TLS, jadi backend perlu HTTPS sebelum rilis.
+
+Untuk menguji GPS di emulator, atur lokasi dari menu Extended controls atau `adb emu geo fix <longitude> <latitude>`, lalu tekan "Perbarui Lokasi GPS" di app.
 
 ## Keamanan Konfigurasi
 

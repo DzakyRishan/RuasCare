@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lapor_jalan/core/constants/app_constants.dart';
 import 'package:lapor_jalan/features/auth/data/auth_repository_provider.dart';
 import 'package:lapor_jalan/features/reports/data/api_report_repository.dart';
 import 'package:lapor_jalan/features/reports/domain/report_repository.dart';
@@ -15,11 +16,11 @@ final dioProvider = Provider<Dio>((ref) {
 
 /// Titik tunggal penyedia [ReportRepository].
 ///
-/// Sekarang terhubung ke Spring Boot backend (localhost:8080).
+/// Terhubung ke Spring Boot backend di [AppConstants.apiBaseUrl].
 final reportRepositoryProvider = Provider<ReportRepository>((ref) {
   return ApiReportRepository(
     secureStorage: ref.watch(secureStorageProvider),
     dio: ref.watch(dioProvider),
-    baseUrl: 'http://localhost:8080',
+    baseUrl: AppConstants.apiBaseUrl,
   );
 });
