@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lapor_jalan/features/reports/presentation/controllers/resubmit_report_controller.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
 import 'package:lapor_jalan/features/reports/presentation/controllers/report_detail_controller.dart';
+import 'package:lapor_jalan/features/reports/presentation/controllers/resubmit_report_controller.dart';
+import 'package:lapor_jalan/features/reports/presentation/widgets/report_photo_strip.dart';
 
 class ResubmitReportScreen extends ConsumerStatefulWidget {
   const ResubmitReportScreen({required this.reportId, super.key});
@@ -17,7 +19,7 @@ class _ResubmitReportScreenState extends ConsumerState<ResubmitReportScreen> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   
-  final List<String> _photoUrls = [];
+  final List<ReportPhoto> _photos = [];
 
   @override
   void dispose() {
@@ -25,29 +27,17 @@ class _ResubmitReportScreenState extends ConsumerState<ResubmitReportScreen> {
     super.dispose();
   }
 
-  void _pickMockPhoto() {
-    if (_photoUrls.length >= 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Maksimal 3 foto per laporan.')),
-      );
-      return;
-    }
-    setState(() {
-      _photoUrls.add('https://picsum.photos/seed/road_${DateTime.now().millisecondsSinceEpoch}/600/400');
-    });
-  }
-
-  void _submit() async {
+  Future<void> _submit() async {
     final description = _descriptionController.text.trim();
 
-    if (_photoUrls.isEmpty && description.isEmpty) {
+    if (_photos.isEmpty && description.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sertakan foto baru atau keterangan baru untuk mengajukan ulang.')),
       );
       return;
     }
 
-    if (_photoUrls.isNotEmpty && _photoUrls.length < 2) {
+    if (_photos.isNotEmpty && _photos.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Jika mengganti foto, minimal lampirkan 2 foto.')),
       );
@@ -59,7 +49,7 @@ class _ResubmitReportScreenState extends ConsumerState<ResubmitReportScreen> {
     final success = await ref.read(resubmitReportControllerProvider.notifier).resubmitReport(
           reportId: widget.reportId,
           description: description.isNotEmpty ? description : null,
-          photoUrls: _photoUrls.isNotEmpty ? _photoUrls : null,
+          photos: _photos,
         );
 
     if (!mounted) return;
@@ -145,71 +135,14 @@ class _ResubmitReportScreenState extends ConsumerState<ResubmitReportScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Foto Baru (opsional, 2-3 foto)', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('${_photoUrls.length}/3', style: const TextStyle(color: Colors.grey)),
+                      Text('${_photos.length}/3', style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    height: 100,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _photoUrls.length + (_photoUrls.length < 3 ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == _photoUrls.length) {
-                          return InkWell(
-                            onTap: _pickMockPhoto,
-                            child: Container(
-                              width: 100,
-                              margin: const EdgeInsets.only(right: 8),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.add_a_photo, size: 32),
-                                  SizedBox(height: 4),
-                                  Text('Tambah', style: TextStyle(fontSize: 12)),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                        return Container(
-                          width: 100,
-                          margin: const EdgeInsets.only(right: 8),
-                          child: Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  _photoUrls[index],
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Positioned(
-                                top: 4,
-                                right: 4,
-                                child: InkWell(
-                                  onTap: () => setState(() => _photoUrls.removeAt(index)),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.black54,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.close, size: 16, color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                  ReportPhotoStrip(
+                    newPhotos: _photos,
+                    onPhotoAdded: (photo) => setState(() => _photos.add(photo)),
+                    onNewPhotoRemoved: (index) => setState(() => _photos.removeAt(index)),
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(

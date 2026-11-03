@@ -11,6 +11,7 @@ abstract final class AppRoutes {
   static const String register = '/register';
 
   // Warga.
+  static const String home = '/home';
   static const String nearbyReports = '/reports';
   static const String createReport = '/reports/new';
   static const String reportDetail = '/reports/:id';
@@ -26,6 +27,7 @@ abstract final class AppRoutes {
   /// Nama route untuk `context.goNamed`.
   static const String loginName = 'login';
   static const String registerName = 'register';
+  static const String homeName = 'home';
   static const String nearbyReportsName = 'nearby-reports';
   static const String createReportName = 'create-report';
   static const String reportDetailName = 'report-detail';
@@ -46,7 +48,7 @@ abstract final class AppRoutes {
   /// Beranda sesuai role (PRD §5: layar ditentukan oleh role).
   static String homeFor(UserRole role) {
     return switch (role) {
-      UserRole.warga => nearbyReports,
+      UserRole.warga => home,
       UserRole.petugas => officerReports,
     };
   }

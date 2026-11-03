@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lapor_jalan/core/constants/app_constants.dart';
 import 'package:lapor_jalan/core/error/app_exception.dart';
@@ -11,6 +13,7 @@ import 'package:lapor_jalan/features/auth/domain/user.dart';
 import 'package:lapor_jalan/features/reports/data/fake/fake_report_repository.dart';
 import 'package:lapor_jalan/features/reports/domain/report_enums.dart';
 import 'package:lapor_jalan/features/reports/domain/report_inputs.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
 
 void main() {
   group('Geo Utility', () {
@@ -41,7 +44,7 @@ void main() {
         user: FakeUsers.budi,
         location: AppRoutes.officerReports,
       );
-      expect(redirect, equals(AppRoutes.nearbyReports));
+      expect(redirect, equals(AppRoutes.home));
     });
 
     test('Petugas is redirected away from citizen routes', () {
@@ -57,7 +60,7 @@ void main() {
         user: FakeUsers.budi,
         location: AppRoutes.login,
       );
-      expect(redirect, equals(AppRoutes.nearbyReports));
+      expect(redirect, equals(AppRoutes.home));
     });
   });
 
@@ -184,10 +187,13 @@ void main() {
       );
 
       final created = await reportRepo.createReport(
-        const CreateReportInput(
+        CreateReportInput(
           reporterName: 'Budi Santoso',
           location: 'Jl. Jendral Sudirman',
-          photoUrls: ['/mock/photo1.jpg', '/mock/photo2.jpg'],
+          photos: [
+            ReportPhoto(fileName: 'photo1.jpg', bytes: Uint8List.fromList([1])),
+            ReportPhoto(fileName: 'photo2.jpg', bytes: Uint8List.fromList([2])),
+          ],
           latitude: -6.175000,
           longitude: 106.827000,
           description: 'Jalan berlubang parah di depan halte busway.',

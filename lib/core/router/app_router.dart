@@ -9,6 +9,7 @@ import 'package:lapor_jalan/features/auth/presentation/screens/login_screen.dart
 import 'package:lapor_jalan/features/auth/presentation/screens/register_screen.dart';
 import 'package:lapor_jalan/features/reports/presentation/screens/create_report_screen.dart';
 import 'package:lapor_jalan/features/reports/presentation/screens/edit_report_screen.dart';
+import 'package:lapor_jalan/features/reports/presentation/screens/home_screen.dart';
 import 'package:lapor_jalan/features/reports/presentation/screens/my_reports_screen.dart';
 import 'package:lapor_jalan/features/reports/presentation/screens/nearby_reports_screen.dart';
 import 'package:lapor_jalan/features/reports/presentation/screens/officer_dashboard_screen.dart';
@@ -53,6 +54,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // Warga
+      GoRoute(
+        path: AppRoutes.home,
+        name: AppRoutes.homeName,
+        builder: (context, state) => const HomeScreen(),
+      ),
       GoRoute(
         path: AppRoutes.nearbyReports,
         name: AppRoutes.nearbyReportsName,

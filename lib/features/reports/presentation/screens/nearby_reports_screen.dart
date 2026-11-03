@@ -48,6 +48,17 @@ class NearbyReportsScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Perbarui lokasi GPS',
+            icon: state.isLocating
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.my_location_rounded),
+            onPressed: state.isLocating ? null : controller.loadCurrentLocation,
+          ),
           // Navigasi ke Laporan Saya (PRD §6)
           IconButton(
             tooltip: 'Laporan Saya',
@@ -239,6 +250,7 @@ class NearbyReportsScreen extends ConsumerWidget {
               radiusKm: state.radiusKm,
               reports: reports,
               onReportSelected: (report) => _navigateToDetail(context, report),
+              onRefreshLocation: controller.loadCurrentLocation,
             );
           }
 

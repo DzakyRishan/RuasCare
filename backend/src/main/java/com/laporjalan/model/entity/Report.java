@@ -52,6 +52,10 @@ public class Report {
     @Column(name = "photo_urls", columnDefinition = "TEXT[]")
     private String[] photoUrls;
 
+    /** Foto bukti perbaikan yang diunggah petugas saat status Diperbaiki. */
+    @Column(name = "repair_photo_urls", columnDefinition = "TEXT[]")
+    private String[] repairPhotoUrls;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "reject_reason")
     private RejectReason rejectReason;

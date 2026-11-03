@@ -128,14 +128,17 @@ Semua response berformat JSON. Detail contoh request dan response dilengkapi di 
 | PUT | /api/reports/{id} | Warga pemilik | Ubah laporan (hanya status Dilaporkan) |
 | DELETE | /api/reports/{id} | Warga pemilik | Hapus laporan (hanya status Dilaporkan) |
 | GET | /api/my-reports | Warga | Laporan milik sendiri |
-| POST | /api/reports/{id}/resubmit | Warga pemilik | Ajukan ulang laporan yang ditolak |
+| POST | /api/reports/{id}/resubmit | Warga pemilik | Ajukan ulang laporan yang ditolak (multipart: keterangan dan/atau 2-3 foto baru) |
 | GET | /api/officer/reports?status=&severity= | Petugas | Semua laporan dengan filter |
-| PUT | /api/reports/{id}/status | Petugas | Ubah status (alasan wajib jika Ditolak) |
+| PUT | /api/reports/{id}/status | Petugas | Verifikasi atau tolak (alasan wajib jika Ditolak). Status Diperbaiki ditolak di sini |
+| POST | /api/reports/{id}/fix | Petugas | Tandai Diperbaiki (multipart: 1-3 foto bukti perbaikan, catatan opsional). Hanya dari status Diverifikasi |
+
+Catatan: `PUT /api/reports/{id}` (ubah laporan) juga multipart. Foto lama yang tetap dipakai dikirim lewat `keepPhotoUrls`, foto baru lewat `photos`, dan totalnya harus 2-3 foto.
 
 ## 12. Skema Database (draft)
 
 - users: id, name, email, password, role (warga/petugas), timestamps.
-- reports: id, user_id, description, severity (ringan/sedang/parah), status (dilaporkan/diverifikasi/diperbaiki/ditolak), latitude, longitude, photo_path, reject_reason, reject_note, timestamps. Indeks pada kolom lokasi dan status.
+- reports: id, user_id, description, severity (ringan/sedang/parah), status (dilaporkan/diverifikasi/diperbaiki/ditolak), latitude, longitude, photo_urls, repair_photo_urls (foto bukti perbaikan dari petugas), reject_reason, reject_note, timestamps. Indeks pada kolom lokasi dan status.
 - report_status_logs: id, report_id, changed_by (user_id), from_status, to_status, note, created_at.
 
 ## 13. Keamanan

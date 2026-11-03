@@ -104,12 +104,13 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{citizenToken}}" }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"description\": \"Keterangan laporan diperbarui agar lebih jelas.\"\n}"
+              "mode": "formdata",
+              "formdata": [
+                { "key": "description", "value": "Keterangan laporan diperbarui agar lebih jelas.", "type": "text" }
+              ]
             },
             "url": "{{baseUrl}}/api/reports/{{reportId}}/resubmit"
           }
@@ -160,18 +161,20 @@
           }
         },
         {
-          "name": "Mark Report Fixed",
+          "name": "Mark Report Fixed (with repair photos)",
           "request": {
-            "method": "PUT",
+            "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{officerToken}}" }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"newStatus\": \"DIPERBAIKI\",\n  \"note\": \"Perbaikan jalan telah selesai.\"\n}"
+              "mode": "formdata",
+              "formdata": [
+                { "key": "note", "value": "Perbaikan jalan telah selesai.", "type": "text" },
+                { "key": "photos", "type": "file", "src": [] }
+              ]
             },
-            "url": "{{baseUrl}}/api/reports/{{reportId}}/status"
+            "url": "{{baseUrl}}/api/reports/{{reportId}}/fix"
           }
         }
       ]

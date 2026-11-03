@@ -1,18 +1,24 @@
 package com.laporjalan.controller;
 
 import com.laporjalan.dto.request.CreateReportRequest;
-import com.laporjalan.dto.request.ResubmitReportRequest;
 import com.laporjalan.dto.request.UpdateReportRequest;
 import com.laporjalan.dto.request.UpdateReportStatusRequest;
 import com.laporjalan.dto.response.ReportResponse;
 import com.laporjalan.model.enums.ReportSeverity;
 import com.laporjalan.model.enums.ReportStatus;
+import com.laporjalan.service.ReportPhotoStorageService;
 import com.laporjalan.service.ReportService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,25 +28,49 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/reports")
+@Validated
 public class ReportController {
 
     private final ReportService reportService;
+    private final ReportPhotoStorageService photoStorageService;
 
-    public ReportController(ReportService reportService) {
+    public ReportController(
+            ReportService reportService,
+            ReportPhotoStorageService photoStorageService) {
         this.reportService = reportService;
+        this.photoStorageService = photoStorageService;
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('CITIZEN')")
     public ResponseEntity<ReportResponse> createReport(
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody CreateReportRequest request) {
-        return ResponseEntity.ok(reportService.createReport(userDetails.getUsername(), request));
+            @RequestParam @NotBlank @Size(max = 1000) String description,
+            @RequestParam @NotNull ReportSeverity severity,
+            @RequestParam @NotNull Double latitude,
+            @RequestParam @NotNull Double longitude,
+            @RequestParam(required = false) @Size(max = 255) String locationName,
+            @RequestParam("photos") List<MultipartFile> photos) {
+        List<String> photoUrls = photoStorageService.storeReportPhotos(photos);
+        try {
+            CreateReportRequest request = new CreateReportRequest();
+            request.setDescription(description);
+            request.setSeverity(severity);
+            request.setLatitude(latitude);
+            request.setLongitude(longitude);
+            request.setLocationName(locationName);
+            request.setPhotoUrls(photoUrls);
+            return ResponseEntity.ok(reportService.createReport(userDetails.getUsername(), request));
+        } catch (RuntimeException exception) {
+            photoStorageService.deletePhotos(photoUrls);
+            throw exception;
+        }
     }
 
     @GetMapping("/{id}")
@@ -52,25 +82,46 @@ public class ReportController {
                 userDetails == null ? null : userDetails.getUsername()));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('CITIZEN')")
     public ResponseEntity<ReportResponse> updateReport(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UpdateReportRequest request) {
-        return ResponseEntity.ok(reportService.updateReport(id, userDetails.getUsername(), request));
+            @Valid @ModelAttribute UpdateReportRequest request,
+            @RequestParam(name = "photos", required = false) List<MultipartFile> photos) {
+        return ResponseEntity.ok(reportService.updateReport(
+                id,
+                userDetails.getUsername(),
+                request,
+                photos));
     }
 
-    @PostMapping("/{id}/resubmit")
+    @PostMapping(value = "/{id}/resubmit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('CITIZEN')")
     public ResponseEntity<ReportResponse> resubmitReport(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody ResubmitReportRequest request) {
+            @RequestParam(required = false) String description,
+            @RequestParam(name = "photos", required = false) List<MultipartFile> photos) {
         return ResponseEntity.ok(reportService.resubmitReport(
                 id,
                 userDetails.getUsername(),
-                request));
+                description,
+                photos));
+    }
+
+    @PostMapping(value = "/{id}/fix", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('OFFICER')")
+    public ResponseEntity<ReportResponse> markReportFixed(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) String note,
+            @RequestParam("photos") List<MultipartFile> photos) {
+        return ResponseEntity.ok(reportService.markReportFixed(
+                id,
+                userDetails.getUsername(),
+                note,
+                photos));
     }
 
     @DeleteMapping("/{id}")

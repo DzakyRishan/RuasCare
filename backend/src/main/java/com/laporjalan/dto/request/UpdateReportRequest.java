@@ -6,19 +6,25 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * Perubahan laporan oleh warga pemilik. Foto baru dikirim terpisah sebagai
+ * multipart; {@code keepPhotoUrls} berisi foto lama yang tetap dipakai.
+ */
 @Data
 public class UpdateReportRequest {
-    
+
+    @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
-    
+
     private ReportSeverity severity;
-    
+
     private Double latitude;
-    
+
     private Double longitude;
-    
+
+    @Size(max = 255, message = "Location name must not exceed 255 characters")
     private String locationName;
-    
-    @Size(min = 2, max = 3, message = "Must provide 2-3 photos")
-    private List<String> photoUrls;
+
+    /** Null berarti foto tidak diubah. */
+    private List<String> keepPhotoUrls;
 }

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RuasCare — Opsi Upload Foto</title>
+  <style>
+    :root { --blue:#1a56db; --surface:#f8f9ff; --card:#fff; --text:#1c1b20; --muted:#62636c; --border:#c6c6d0; --red:#b42318; }
+    * { box-sizing:border-box } body { margin:0; padding:32px; background:var(--surface); color:var(--text); font:15px/1.45 Arial,sans-serif } h1 { margin:0 0 6px; font-size:28px } .lead { margin:0 0 28px; color:var(--muted) } .options { display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:24px; max-width:1050px } .option { padding:20px; background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:0 3px 12px #1a56db0d } .recommended { border:2px solid var(--blue) } .tag { display:inline-block; padding:4px 9px; border-radius:99px; background:#eaf0ff; color:var(--blue); font-size:12px; font-weight:700 } h2 { margin:12px 0 5px; font-size:21px } .description { min-height:48px; color:var(--muted) } .phone { margin-top:18px; border:1px solid #dddde6; border-radius:18px; overflow:hidden; background:#fff } .bar { padding:13px 16px; border-bottom:1px solid #eee; font-weight:700 } .form { padding:16px } .grid { display:flex; gap:8px; margin:10px 0 } .image, .add { width:88px; height:88px; border-radius:10px; display:grid; place-items:center } .image { background:linear-gradient(135deg,#947452,#3a7158); color:#fff; font-size:12px; font-weight:700 } .image:nth-child(2) { background:linear-gradient(135deg,#8aaed5,#657486) } .add { border:1.5px dashed var(--blue); color:var(--blue); font-size:27px } button { width:100%; min-height:44px; border:0; border-radius:10px; background:var(--blue); color:#fff; font-weight:700; font-size:14px } .sheet { border-top:1px solid #dddde6; padding:14px 16px; background:#fff } .source { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #eee; font-weight:600 } .icon { color:var(--blue); font-size:22px; width:28px; text-align:center } .warning { padding:10px; border-left:3px solid var(--red); background:#fff4f2; color:#7a271a; border-radius:4px; font-size:12px } ul { margin:16px 0 0; padding-left:20px } li { margin:7px 0 } .recommendation { max-width:1050px; margin-top:24px; padding:14px 16px; border-left:4px solid var(--blue); border-radius:0 10px 10px 0; background:#eef3ff }
+  </style>
+</head>
+<body>
+  <h1>RuasCare — Upload Foto Kerusakan</h1>
+  <p class="lead">Mockup untuk form laporan. Warga wajib melampirkan minimal dua dan maksimal tiga foto.</p>
+  <section class="options">
+    <article class="option recommended">
+      <span class="tag">REKOMENDASI · OPSI A</span>
+      <h2>Pilih sumber tiap foto</h2>
+      <p class="description">Tombol Tambah membuka pilihan Kamera atau Galeri. Cocok saat warga sedang berada di lokasi jalan rusak.</p>
+      <div class="phone">
+        <div class="bar">Buat Laporan Baru</div>
+        <div class="form">
+          <strong>Foto Kerusakan · 2/3</strong>
+          <div class="grid"><div class="image">Foto 1</div><div class="image">Foto 2</div><div class="add">＋</div></div>
+          <div class="warning">Minimal 2 foto diperlukan sebelum laporan dikirim.</div>
+        </div>
+        <div class="sheet">
+          <strong>Tambahkan Foto</strong>
+          <div class="source"><span class="icon">◉</span>Ambil dari Kamera</div>
+          <div class="source"><span class="icon">▣</span>Pilih dari Galeri</div>
+        </div>
+      </div>
+      <ul><li>Kamera dan galeri selalu tersedia.</li><li>Setiap foto dapat diganti atau dihapus.</li><li>Foto dikompres sebelum diunggah.</li></ul>
+    </article>
+    <article class="option">
+      <span class="tag">OPSI B</span>
+      <h2>Langsung buka galeri</h2>
+      <p class="description">Tombol Tambah langsung membuka galeri. Tombol Kamera terpisah berada di bawah grid foto.</p>
+      <div class="phone">
+        <div class="bar">Buat Laporan Baru</div>
+        <div class="form">
+          <strong>Foto Kerusakan · 2/3</strong>
+          <div class="grid"><div class="image">Foto 1</div><div class="image">Foto 2</div><div class="add">＋</div></div>
+          <button>▣ Pilih dari Galeri</button>
+          <button style="margin-top:8px;background:#fff;color:#1a56db;border:1px solid #1a56db">◉ Ambil Foto Baru</button>
+        </div>
+      </div>
+      <ul><li>Lebih cepat jika foto sudah ada.</li><li>Kamera lebih mudah terlewat oleh pelapor.</li><li>Memerlukan dua tombol pada form.</li></ul>
+    </article>
+  </section>
+  <aside class="recommendation"><strong>Rekomendasi: Opsi A.</strong> Warga dapat memotret kerusakan langsung atau memilih foto yang sudah ada, tanpa menambah tombol permanen pada form.</aside>
+</body>
+</html>

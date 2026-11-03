@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lapor_jalan/features/reports/data/report_repository_provider.dart';
-import 'package:lapor_jalan/features/reports/domain/report_repository.dart';
-import 'package:lapor_jalan/features/reports/domain/report_inputs.dart';
 import 'package:lapor_jalan/features/reports/domain/report_enums.dart';
+import 'package:lapor_jalan/features/reports/domain/report_inputs.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
+import 'package:lapor_jalan/features/reports/domain/report_repository.dart';
 
 final editReportControllerProvider =
     StateNotifierProvider.autoDispose<EditReportController, AsyncValue<void>>(
@@ -16,7 +17,8 @@ class EditReportController extends StateNotifier<AsyncValue<void>> {
 
   Future<bool> updateReport({
     required int reportId,
-    List<String>? photoUrls,
+    List<String>? keepPhotoUrls,
+    List<ReportPhoto> newPhotos = const [],
     double? latitude,
     double? longitude,
     String? description,
@@ -25,7 +27,8 @@ class EditReportController extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       final input = UpdateReportInput(
-        photoUrls: photoUrls,
+        keepPhotoUrls: keepPhotoUrls,
+        newPhotos: newPhotos,
         latitude: latitude,
         longitude: longitude,
         description: description,

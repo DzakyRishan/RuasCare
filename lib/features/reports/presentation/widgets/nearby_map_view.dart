@@ -15,6 +15,7 @@ class NearbyMapView extends StatefulWidget {
     required this.radiusKm,
     required this.reports,
     required this.onReportSelected,
+    required this.onRefreshLocation,
   });
 
   final double userLatitude;
@@ -22,6 +23,7 @@ class NearbyMapView extends StatefulWidget {
   final double radiusKm;
   final List<Report> reports;
   final ValueChanged<Report> onReportSelected;
+  final VoidCallback onRefreshLocation;
 
   @override
   State<NearbyMapView> createState() => _NearbyMapViewState();
@@ -34,6 +36,21 @@ class _NearbyMapViewState extends State<NearbyMapView> {
   void initState() {
     super.initState();
     _mapController = MapController();
+  }
+
+  @override
+  void didUpdateWidget(covariant NearbyMapView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userLatitude != widget.userLatitude ||
+        oldWidget.userLongitude != widget.userLongitude) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _mapController.move(
+          LatLng(widget.userLatitude, widget.userLongitude),
+          13.5,
+        );
+      });
+    }
   }
 
   @override
@@ -260,9 +277,7 @@ class _NearbyMapViewState extends State<NearbyMapView> {
             heroTag: 'recenter_map',
             backgroundColor: theme.colorScheme.surface,
             foregroundColor: theme.colorScheme.primary,
-            onPressed: () {
-              _mapController.move(userPoint, 13.5);
-            },
+            onPressed: widget.onRefreshLocation,
             child: const Icon(Icons.my_location_rounded),
           ),
         ),

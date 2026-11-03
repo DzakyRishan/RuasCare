@@ -294,6 +294,40 @@ class ReportDetailScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 24),
 
+                      // 4b. Foto bukti perbaikan dari petugas
+                      if (report.repairPhotoUrls.isNotEmpty) ...[
+                        Text(
+                          'Bukti Perbaikan',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 140,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: report.repairPhotoUrls.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            itemBuilder: (context, index) => ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.network(
+                                report.repairPhotoUrls[index],
+                                width: 190,
+                                height: 140,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  width: 190,
+                                  color: theme.colorScheme.surfaceContainerHighest,
+                                  child: const Icon(Icons.broken_image_outlined),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+
                       // 5. Lokasi Peta (Mini Map)
                       Row(
                         children: [

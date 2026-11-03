@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lapor_jalan/features/reports/domain/report_enums.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
 import 'package:lapor_jalan/features/reports/presentation/controllers/edit_report_controller.dart';
 import 'package:lapor_jalan/features/reports/presentation/controllers/report_detail_controller.dart';
-import 'package:lapor_jalan/features/reports/domain/report_enums.dart';
+import 'package:lapor_jalan/features/reports/presentation/widgets/report_photo_strip.dart';
 
 class EditReportScreen extends ConsumerStatefulWidget {
   const EditReportScreen({required this.reportId, super.key});
@@ -16,11 +18,24 @@ class EditReportScreen extends ConsumerStatefulWidget {
 
 class _EditReportScreenState extends ConsumerState<EditReportScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _descriptionController;
-  
+  final _descriptionController = TextEditingController();
+
   ReportSeverity? _selectedSeverity;
-  List<String> _photoUrls = [];
+
+  /// Foto lama dari server yang masih dipertahankan.
+  List<String> _existingUrls = [];
+
+  /// Foto lama saat layar dibuka, untuk mendeteksi apakah foto berubah.
+  List<String> _originalUrls = [];
+
+  /// Foto baru dari Kamera/Galeri.
+  final List<ReportPhoto> _newPhotos = [];
   bool _isInitialized = false;
+
+  int get _photoCount => _existingUrls.length + _newPhotos.length;
+
+  bool get _photosChanged =>
+      _newPhotos.isNotEmpty || _existingUrls.length != _originalUrls.length;
 
   @override
   void dispose() {
@@ -28,20 +43,8 @@ class _EditReportScreenState extends ConsumerState<EditReportScreen> {
     super.dispose();
   }
 
-  void _pickMockPhoto() {
-    if (_photoUrls.length >= 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Maksimal 3 foto per laporan.')),
-      );
-      return;
-    }
-    setState(() {
-      _photoUrls.add('https://picsum.photos/seed/road_${DateTime.now().millisecondsSinceEpoch}/600/400');
-    });
-  }
-
-  void _submit() async {
-    if (_photoUrls.length < 2) {
+  Future<void> _submit() async {
+    if (_photoCount < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Minimal lampirkan 2 foto kerusakan.')),
       );
@@ -54,7 +57,8 @@ class _EditReportScreenState extends ConsumerState<EditReportScreen> {
           reportId: widget.reportId,
           description: _descriptionController.text.trim(),
           severity: _selectedSeverity,
-          photoUrls: _photoUrls,
+          keepPhotoUrls: _photosChanged ? _existingUrls : null,
+          newPhotos: _newPhotos,
         );
 
     if (!mounted) return;
@@ -82,28 +86,36 @@ class _EditReportScreenState extends ConsumerState<EditReportScreen> {
       body: reportAsync.when(
         data: (report) {
           if (!_isInitialized) {
-            _descriptionController = TextEditingController(text: report.description);
+            _descriptionController.text = report.description;
             _selectedSeverity = report.severity;
-            _photoUrls = List.from(report.photoUrls);
+            _existingUrls = List.of(report.photoUrls);
+            _originalUrls = List.of(report.photoUrls);
             _isInitialized = true;
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Tingkat Keparahan', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Tingkat Keparahan',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<ReportSeverity>(
                     initialValue: _selectedSeverity,
-                    items: ReportSeverity.values.map((s) => DropdownMenuItem(
-                      value: s,
-                      child: Text(s.label),
-                    )).toList(),
-                    onChanged: (val) => setState(() => _selectedSeverity = val),
+                    items: ReportSeverity.values
+                        .map(
+                          (severity) => DropdownMenuItem(
+                            value: severity,
+                            child: Text(severity.label),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) => setState(() => _selectedSeverity = value),
                     decoration: const InputDecoration(border: OutlineInputBorder()),
                   ),
                   const SizedBox(height: 16),
@@ -113,79 +125,34 @@ class _EditReportScreenState extends ConsumerState<EditReportScreen> {
                       labelText: 'Deskripsi Kerusakan',
                       border: OutlineInputBorder(),
                     ),
-                    validator: (val) => val == null || val.isEmpty ? 'Wajib diisi' : null,
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Deskripsi kerusakan wajib diisi.'
+                        : null,
                     maxLines: 3,
                   ),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Foto Kerusakan (2-3 foto)', style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('${_photoUrls.length}/3', style: const TextStyle(color: Colors.grey)),
+                      const Text(
+                        'Foto Kerusakan (2-3 foto)',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '$_photoCount/3',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    height: 100,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _photoUrls.length + (_photoUrls.length < 3 ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == _photoUrls.length) {
-                          return InkWell(
-                            onTap: _pickMockPhoto,
-                            child: Container(
-                              width: 100,
-                              margin: const EdgeInsets.only(right: 8),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.add_a_photo, size: 32),
-                                  SizedBox(height: 4),
-                                  Text('Tambah', style: TextStyle(fontSize: 12)),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                        return Container(
-                          width: 100,
-                          margin: const EdgeInsets.only(right: 8),
-                          child: Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  _photoUrls[index],
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Positioned(
-                                top: 4,
-                                right: 4,
-                                child: InkWell(
-                                  onTap: () => setState(() => _photoUrls.removeAt(index)),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.black54,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.close, size: 16, color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                  ReportPhotoStrip(
+                    existingUrls: _existingUrls,
+                    newPhotos: _newPhotos,
+                    onPhotoAdded: (photo) => setState(() => _newPhotos.add(photo)),
+                    onNewPhotoRemoved: (index) =>
+                        setState(() => _newPhotos.removeAt(index)),
+                    onExistingRemoved: (index) =>
+                        setState(() => _existingUrls.removeAt(index)),
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
@@ -193,8 +160,12 @@ class _EditReportScreenState extends ConsumerState<EditReportScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     onPressed: editState.isLoading ? null : _submit,
-                    child: editState.isLoading 
-                        ? const CircularProgressIndicator() 
+                    child: editState.isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : const Text('Simpan Perubahan', style: TextStyle(fontSize: 16)),
                   ),
                 ],
