@@ -23,7 +23,6 @@ RuasCare adalah aplikasi pelaporan jalan rusak berbasis Flutter dan Spring Boot.
 Fitur inti autentikasi, laporan, dashboard Petugas, dan API status telah tersedia. Fitur berikut masih dalam pengembangan sebelum rilis Android:
 
 - GPS perangkat dan validasi akurasi lokasi.
-- Pemilihan foto dari kamera/galeri, kompresi, upload multipart, dan penyimpanan file server.
 - Foto bukti perbaikan dari Petugas.
 - Pengujian widget dan integrasi Android yang stabil.
 
@@ -116,7 +115,7 @@ Untuk Flutter Web lokal, base URL `http://localhost:8080` dapat dipakai. Untuk A
 - [x] Pengguna dapat mendaftar dan login agar laporan terhubung ke akun.
 
 ### Warga
-- [ ] Warga dapat membuat laporan dengan foto asli, lokasi GPS, deskripsi, dan tingkat keparahan.
+- [x] Warga dapat membuat laporan dengan foto asli, lokasi GPS, deskripsi, dan tingkat keparahan.
 - [x] Warga dapat melihat peta dan daftar laporan di sekitar (maksimal 10 km).
 - [x] Warga dapat melihat detail laporan beserta statusnya.
 - [ ] Warga dapat mengubah atau menghapus laporan sendiri selama statusnya masih Dilaporkan.

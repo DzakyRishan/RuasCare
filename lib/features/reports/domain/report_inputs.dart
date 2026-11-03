@@ -1,9 +1,10 @@
 import 'package:lapor_jalan/features/reports/domain/report_enums.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
 
 /// Data untuk `POST /api/reports` (multipart).
 class CreateReportInput {
   const CreateReportInput({
-    required this.photoUrls,
+    required this.photos,
     required this.latitude,
     required this.longitude,
     required this.description,
@@ -12,8 +13,8 @@ class CreateReportInput {
     required this.location,
   });
 
-  /// Daftar path file foto lokal yang sudah dikompres (PRD §9, 2-3 foto).
-  final List<String> photoUrls;
+  /// Byte foto hasil pemilihan Kamera/Galeri yang siap diunggah.
+  final List<ReportPhoto> photos;
   final double latitude;
   final double longitude;
   final String description;

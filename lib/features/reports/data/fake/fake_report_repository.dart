@@ -125,11 +125,11 @@ class FakeReportRepository implements ReportRepository {
     final viewer = await _begin(requiredRole: UserRole.warga);
 
     final fieldErrors = <String, List<String>>{
-      if (input.photoUrls.isEmpty)
+      if (input.photos.isEmpty)
         'photo': ['Minimal 2 foto wajib dilampirkan.'],
-      if (input.photoUrls.length < 2)
+      if (input.photos.length < 2)
         'photo': ['Minimal 2 foto wajib dilampirkan.'],
-      if (input.photoUrls.length > 3)
+      if (input.photos.length > 3)
         'photo': ['Maksimal 3 foto per laporan.'],
       ..._coordinateErrors(input.latitude, input.longitude),
       ..._descriptionErrors(input.description),
@@ -144,7 +144,9 @@ class FakeReportRepository implements ReportRepository {
       status: ReportStatus.dilaporkan,
       latitude: input.latitude,
       longitude: input.longitude,
-      photoUrls: input.photoUrls.map((p) => _localPhotoUri(p)).toList(),
+      photoUrls: input.photos
+          .map((photo) => _localPhotoUri(photo.fileName))
+          .toList(),
       createdAt: now,
       updatedAt: now,
       statusHistory: List.unmodifiable([

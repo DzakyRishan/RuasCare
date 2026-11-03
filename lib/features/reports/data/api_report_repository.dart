@@ -68,11 +68,7 @@ class ApiReportRepository implements ReportRepository {
 
   Future<Map<String, String>> _getHeaders() async {
     final token = await _getToken();
-    final userId = await _storage.read(key: 'user_id');
-    return {
-      'Authorization': 'Bearer $token',
-      if (userId != null) 'X-User-Id': userId,
-    };
+    return {'Authorization': 'Bearer $token'};
   }
 
   @override
@@ -97,15 +93,21 @@ class ApiReportRepository implements ReportRepository {
       final headers = await _getHeaders();
       final response = await _dio.post(
         '$_baseUrl/api/reports',
-        data: {
+        data: FormData.fromMap({
           'description': input.description,
           'severity': input.severity.name.toUpperCase(),
           'latitude': input.latitude,
           'longitude': input.longitude,
           'locationName': input.location,
-          'reporterName': input.reporterName,
-          'photoUrls': input.photoUrls,
-        },
+          'photos': input.photos
+              .map(
+                (photo) => MultipartFile.fromBytes(
+                  photo.bytes,
+                  filename: photo.fileName,
+                ),
+              )
+              .toList(),
+        }),
         options: Options(headers: headers),
       );
       return _mapFromJson(response.data);
@@ -222,7 +224,9 @@ class ApiReportRepository implements ReportRepository {
       status: ReportStatus.values.firstWhere(
         (e) => e.name.toLowerCase() == json['status'].toString().toLowerCase(),
       ),
-      photoUrls: List<String>.from(json['photoUrls'] ?? []),
+      photoUrls: List<String>.from(json['photoUrls'] ?? [])
+          .map(_resolvePhotoUrl)
+          .toList(),
       rejectReason: json['rejectReason'] != null
           ? _rejectReasonFromApi(json['rejectReason'].toString())
           : null,
@@ -240,6 +244,13 @@ class ApiReportRepository implements ReportRepository {
           : null,
       statusHistory: _mapStatusHistory(json['statusHistory']),
     );
+  }
+
+  String _resolvePhotoUrl(String value) {
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+    return '$_baseUrl$value';
   }
 
   List<ReportStatusLog> _mapStatusHistory(dynamic rawHistory) {

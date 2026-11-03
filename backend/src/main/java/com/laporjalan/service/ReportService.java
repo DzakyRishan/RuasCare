@@ -27,14 +27,17 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
     private final ReportStatusLogRepository reportStatusLogRepository;
+    private final ReportPhotoStorageService photoStorageService;
 
     public ReportService(
             ReportRepository reportRepository,
             UserRepository userRepository,
-            ReportStatusLogRepository reportStatusLogRepository) {
+            ReportStatusLogRepository reportStatusLogRepository,
+            ReportPhotoStorageService photoStorageService) {
         this.reportRepository = reportRepository;
         this.userRepository = userRepository;
         this.reportStatusLogRepository = reportStatusLogRepository;
+        this.photoStorageService = photoStorageService;
     }
 
     public ReportResponse createReport(String reporterEmail, CreateReportRequest request) {
@@ -136,6 +139,7 @@ public class ReportService {
                     HttpStatus.CONFLICT, "Only reported reports can be deleted");
         }
 
+        photoStorageService.deletePhotos(List.of(report.getPhotoUrls()));
         reportStatusLogRepository.deleteAllInBatch(
                 reportStatusLogRepository.findByReportIdOrderByCreatedAtDesc(reportId));
         reportRepository.delete(report);

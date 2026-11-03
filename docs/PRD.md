@@ -135,7 +135,7 @@ Semua response berformat JSON. Detail contoh request dan response dilengkapi di 
 ## 12. Skema Database (draft)
 
 - users: id, name, email, password, role (warga/petugas), timestamps.
-- reports: id, user_id, description, severity (ringan/sedang/parah), status (dilaporkan/diverifikasi/diperbaiki/ditolak), latitude, longitude, photo_path, reject_reason, reject_note, timestamps. Indeks pada kolom lokasi dan status.
+- reports: id, user_id, description, severity (ringan/sedang/parah), status (dilaporkan/diverifikasi/diperbaiki/ditolak), latitude, longitude, photo_urls, reject_reason, reject_note, timestamps. Indeks pada kolom lokasi dan status.
 - report_status_logs: id, report_id, changed_by (user_id), from_status, to_status, note, created_at.
 
 ## 13. Keamanan

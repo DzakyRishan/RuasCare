@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lapor_jalan/features/reports/data/device_location_repository_provider.dart';
 import 'package:lapor_jalan/features/reports/domain/device_location_repository.dart';
 import 'package:lapor_jalan/features/reports/domain/report_enums.dart';
 import 'package:lapor_jalan/features/reports/domain/report_location.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
 import 'package:lapor_jalan/features/reports/presentation/controllers/create_report_controller.dart';
 
 class CreateReportScreen extends ConsumerStatefulWidget {
@@ -19,7 +21,8 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
   final _reporterNameController = TextEditingController();
   final _locationController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final List<String> _photoUrls = [];
+  final List<ReportPhoto> _photos = [];
+  final _imagePicker = ImagePicker();
 
   ReportSeverity _selectedSeverity = ReportSeverity.sedang;
   ReportLocation? _reportLocation;
@@ -71,18 +74,86 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
     }
   }
 
-  void _pickMockPhoto() {
-    if (_photoUrls.length >= 3) {
+  Future<void> _showPhotoSourceSheet() async {
+    if (_photos.length >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Maksimal 3 foto per laporan.')),
       );
       return;
     }
-    setState(() {
-      _photoUrls.add(
-        'https://picsum.photos/seed/road_${DateTime.now().millisecondsSinceEpoch}/600/400',
+
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Tambahkan Foto',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_rounded),
+                title: const Text('Ambil dari Kamera'),
+                onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (source != null) {
+      await _pickPhoto(source);
+    }
+  }
+
+  Future<void> _pickPhoto(ImageSource source) async {
+    try {
+      final selectedFile = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: 82,
+        maxWidth: 1920,
+        maxHeight: 1920,
       );
-    });
+      if (selectedFile == null) return;
+
+      final bytes = await selectedFile.readAsBytes();
+      const maxBytes = 5 * 1024 * 1024;
+      if (bytes.lengthInBytes > maxBytes) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Foto masih lebih dari 5 MB. Pilih foto lain.'),
+          ),
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _photos.add(
+          ReportPhoto(fileName: selectedFile.name, bytes: bytes),
+        );
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Foto tidak dapat dipilih. Periksa izin kamera atau galeri.'),
+        ),
+      );
+    }
   }
 
   Future<bool> _confirmLowAccuracy(ReportLocation location) async {
@@ -110,7 +181,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
   }
 
   Future<void> _submit() async {
-    if (_photoUrls.length < 2) {
+    if (_photos.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Minimal lampirkan 2 foto kerusakan.')),
       );
@@ -144,7 +215,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
           longitude: reportLocation.longitude,
           description: _descriptionController.text.trim(),
           severity: _selectedSeverity,
-          photoUrls: _photoUrls,
+          photos: _photos,
           reporterName: _reporterNameController.text.trim(),
           location: _locationController.text.trim(),
         );
@@ -344,7 +415,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
                     'Foto Kerusakan (2-3 foto)',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  Text('${_photoUrls.length}/3', style: const TextStyle(color: Colors.grey)),
+                  Text('${_photos.length}/3', style: const TextStyle(color: Colors.grey)),
                 ],
               ),
               const SizedBox(height: 8),
@@ -352,11 +423,11 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
                 height: 100,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: _photoUrls.length + (_photoUrls.length < 3 ? 1 : 0),
+                  itemCount: _photos.length + (_photos.length < 3 ? 1 : 0),
                   itemBuilder: (context, index) {
-                    if (index == _photoUrls.length) {
+                    if (index == _photos.length) {
                       return InkWell(
-                        onTap: _pickMockPhoto,
+                        onTap: _showPhotoSourceSheet,
                         child: Container(
                           width: 100,
                           margin: const EdgeInsets.only(right: 8),
@@ -382,8 +453,8 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              _photoUrls[index],
+                            child: Image.memory(
+                              _photos[index].bytes,
                               width: 100,
                               height: 100,
                               fit: BoxFit.cover,
@@ -393,7 +464,7 @@ class _CreateReportScreenState extends ConsumerState<CreateReportScreen> {
                             top: 4,
                             right: 4,
                             child: InkWell(
-                              onTap: () => setState(() => _photoUrls.removeAt(index)),
+                              onTap: () => setState(() => _photos.removeAt(index)),
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: const BoxDecoration(

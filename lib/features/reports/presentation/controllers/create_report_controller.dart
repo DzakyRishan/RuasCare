@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lapor_jalan/features/reports/domain/report_repository.dart';
 import 'package:lapor_jalan/features/reports/domain/report_inputs.dart';
 import 'package:lapor_jalan/features/reports/domain/report_enums.dart';
+import 'package:lapor_jalan/features/reports/domain/report_photo.dart';
 import 'package:lapor_jalan/features/reports/data/report_repository_provider.dart';
 
 final createReportControllerProvider =
@@ -20,14 +21,14 @@ class CreateReportController extends StateNotifier<AsyncValue<void>> {
     required double longitude,
     required String description,
     required ReportSeverity severity,
-    required List<String> photoUrls,
+    required List<ReportPhoto> photos,
     required String reporterName,
     required String location,
   }) async {
     state = const AsyncValue.loading();
     try {
       final input = CreateReportInput(
-        photoUrls: photoUrls,
+        photos: photos,
         latitude: latitude,
         longitude: longitude,
         description: description,
